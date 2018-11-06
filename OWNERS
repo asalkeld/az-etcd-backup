@@ -1,0 +1,18 @@
+approvers:
+- jim-minter
+- kargakis
+- kwoodson
+- mjudeikis
+- pweil-
+reviewers:
+- asalkeld
+- charlesakalugwu
+- jim-minter
+- kargakis
+- kwoodson
+- mjudeikis
+- pweil-
+- thanasisk
+- thekad
+labels:
+- sig/azure

@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/storage"
@@ -13,9 +12,9 @@ import (
 	"github.com/coreos/etcd-operator/pkg/backup"
 	"github.com/coreos/etcd-operator/pkg/backup/writer"
 	"github.com/coreos/etcd-operator/pkg/util/azureutil/absfactory"
+	"github.com/coreos/etcd-operator/pkg/util/k8sutil"
 	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/openshift/backup/pkg/log"
 )
@@ -86,19 +85,8 @@ func main() {
 	logrus.Printf("backup starting, git commit %s", gitCommit)
 
 	ctx := context.Background()
-	kubeconfig := os.Getenv("KUBECONFIG")
-	if len(kubeconfig) == 0 {
-		kubeconfig = "/etc/origin/node/node.kubeconfig"
-	}
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
-	if err != nil {
-		logrus.Fatal(err)
-	}
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		logrus.Fatal(err)
-	}
-
+	clientset := k8sutil.MustNewKubeClient()
+	var err error
 	if false {
 		err = handleRetrieve(ctx, clientset, "etcd-backup-abs-credentials", "openshift-etcd")
 	} else {

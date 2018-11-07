@@ -52,23 +52,27 @@ func NewBackupManagerFromWriter(kubecli kubernetes.Interface, bw writer.Writer, 
 // SaveSnap uses backup writer to save etcd snapshot to a specified S3 path
 // and returns backup etcd server's kv store revision and its version.
 func (bm *BackupManager) SaveSnap(ctx context.Context, s3Path string) (int64, string, error) {
+	logrus.Infof("SaveSnap:etcdClientWithMaxRevision")
 	etcdcli, rev, err := bm.etcdClientWithMaxRevision(ctx)
 	if err != nil {
 		return 0, "", fmt.Errorf("create etcd client failed: %v", err)
 	}
 	defer etcdcli.Close()
 
+	logrus.Infof("SaveSnap:Status")
 	resp, err := etcdcli.Status(ctx, etcdcli.Endpoints()[0])
 	if err != nil {
 		return 0, "", fmt.Errorf("failed to retrieve etcd version from the status call: %v", err)
 	}
 
+	logrus.Infof("SaveSnap:Snapshot")
 	rc, err := etcdcli.Snapshot(ctx)
 	if err != nil {
 		return 0, "", fmt.Errorf("failed to receive snapshot (%v)", err)
 	}
 	defer rc.Close()
 
+	logrus.Infof("SaveSnap:Write")
 	_, err = bm.bw.Write(ctx, s3Path, rc)
 	if err != nil {
 		return 0, "", fmt.Errorf("failed to write snapshot (%v)", err)
@@ -91,6 +95,7 @@ func getClientWithMaxRev(ctx context.Context, endpoints []string, tc *tls.Config
 	var maxClient *clientv3.Client
 	maxRev := int64(0)
 	errors := make([]string, 0)
+	logrus.Infof("getClientWithMaxRev %v", endpoints)
 	for _, endpoint := range endpoints {
 		// TODO: update clientv3 to 3.2.x and then use ctx as in clientv3.Config.
 		cfg := clientv3.Config{
@@ -98,15 +103,19 @@ func getClientWithMaxRev(ctx context.Context, endpoints []string, tc *tls.Config
 			DialTimeout: constants.DefaultDialTimeout,
 			TLS:         tc,
 		}
+		logrus.Infof("getClientWithMaxRev:client.New %v", endpoint)
 		etcdcli, err := clientv3.New(cfg)
 		if err != nil {
+			logrus.Warnf("failed to create etcd client for endpoint (%v): %v", endpoint, err)
 			errors = append(errors, fmt.Sprintf("failed to create etcd client for endpoint (%v): %v", endpoint, err))
 			continue
 		}
 		mapEps[endpoint] = etcdcli
 
+		logrus.Infof("getClientWithMaxRev:client.get")
 		resp, err := etcdcli.Get(ctx, "/", clientv3.WithSerializable())
 		if err != nil {
+			logrus.Warnf("failed to get revision from endpoint (%s)", endpoint)
 			errors = append(errors, fmt.Sprintf("failed to get revision from endpoint (%s)", endpoint))
 			continue
 		}

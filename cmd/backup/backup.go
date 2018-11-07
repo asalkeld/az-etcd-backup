@@ -90,7 +90,8 @@ func main() {
 	if false {
 		err = handleRetrieve(ctx, clientset, "etcd-backup-abs-credentials", "openshift-etcd")
 	} else {
-		absBackupSource := &v1beta2.ABSBackupSource{Path: "etcd/backup-now", ABSSecret: "etcd-backup-abs-credentials"}
+		path := fmt.Sprintf("etcd/backup-%s", time.Now().Format("2006-01-02T15-04-05"))
+		absBackupSource := &v1beta2.ABSBackupSource{Path: path, ABSSecret: "etcd-backup-abs-credentials"}
 		etcdEndpoints := []string{"https://master-000000:2379", "https://master-000001:2379", "https://master-000002:2379"}
 		err = handleBackup(ctx, clientset, absBackupSource, etcdEndpoints, "etcd-client-tls", "openshift-etcd")
 		if err != nil {

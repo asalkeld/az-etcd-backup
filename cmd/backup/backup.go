@@ -91,7 +91,7 @@ func main() {
 		err = handleRetrieve(ctx, clientset, "etcd-backup-abs-credentials", "openshift-etcd")
 	} else {
 		absBackupSource := &v1beta2.ABSBackupSource{Path: "etcd/backup-now", ABSSecret: "etcd-backup-abs-credentials"}
-		etcdEndpoints := []string{"https://master-000000:2380", "https://master-000001:2380", "https://master-000002:2380"}
+		etcdEndpoints := []string{"https://master-000000:2379", "https://master-000001:2379", "https://master-000002:2379"}
 		err = handleBackup(ctx, clientset, absBackupSource, etcdEndpoints, "etcd-client-tls", "openshift-etcd")
 		if err != nil {
 			// TODO delete the bad backup
